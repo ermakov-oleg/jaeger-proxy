@@ -5,6 +5,8 @@ use tide::{Request, Response, StatusCode};
 
 use lazy_static::lazy_static;
 use surf::url::Url;
+use crate::web::middlewares::access_log;
+
 
 lazy_static! {
     static ref JAEGER_HOST: String = var("JAEGER_HOST").expect("JAEGER_HOST must be setted");
@@ -41,6 +43,9 @@ pub async fn serve(host: String, port: u16) -> Result<(), std::io::Error> {
     let addr: SocketAddr = format!("{}:{}", host, port).parse().expect("Unable to parse socket address");
 
     let mut app = tide::new();
+
+    app.middleware(access_log);
+
     app.at("/").get(proxy_handler);
     app.at("/*").get(proxy_handler);
 
