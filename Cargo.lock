@@ -765,6 +765,8 @@ version = "0.1.0"
 dependencies = [
  "async-std",
  "lazy_static",
+ "serde",
+ "serde_json",
  "structopt",
  "surf",
  "tide",

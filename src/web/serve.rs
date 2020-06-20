@@ -1,12 +1,13 @@
 use std::env::var;
 use std::net::SocketAddr;
 
+use surf::url::Url;
 use tide::{Request, Response, StatusCode};
 
 use lazy_static::lazy_static;
-use surf::url::Url;
-use crate::web::middlewares::access_log;
 
+use crate::web::middlewares::access_log;
+use crate::web::models::GetTraceResponse;
 
 lazy_static! {
     static ref JAEGER_HOST: String = var("JAEGER_HOST").expect("JAEGER_HOST must be setted");
@@ -35,6 +36,39 @@ async fn proxy_handler(req: Request<()>) -> tide::Result {
 }
 
 
+async fn added_log_handler(req: Request<()>) -> tide::Result {
+    let mut path = req.url().clone();
+    path.set_host(Some(&*JAEGER_HOST))?;
+    path.set_port(Some(*JAEGER_PORT)).unwrap();
+
+    let trace_id: String = req.param("trace_id").expect("Expected trace_id parameter");
+
+
+    dbg!(&trace_id);
+
+    let mut res = surf::get(path).await.unwrap();
+
+    let body: String = res.body_string().await.unwrap();
+
+    println!("{:#?}", body);
+
+    let trace_response: GetTraceResponse = serde_json::from_str(body.as_ref()).unwrap();
+    println!("{:#?}", trace_response);
+
+
+    let headers = res.headers();
+
+    let mut resp = Response::new(StatusCode::Ok);
+    headers.iter().for_each(
+        |h| resp.append_header(h.0, h.1)
+    );
+    resp.remove_header("Content-Encoding");
+
+    resp.set_body(serde_json::to_string(&trace_response).unwrap());
+
+    Ok(resp)
+}
+
 
 pub async fn serve(host: String, port: u16) -> Result<(), std::io::Error> {
     let jaeger_url: Url = format!("{}:{}", *JAEGER_HOST, *JAEGER_PORT).parse().expect("Invalid JAEGER_HOST:JAEGER_PORT");
@@ -48,6 +82,7 @@ pub async fn serve(host: String, port: u16) -> Result<(), std::io::Error> {
 
     app.at("/").get(proxy_handler);
     app.at("/*").get(proxy_handler);
+    app.at("/api/traces/:trace_id").get(added_log_handler);
 
     println!("Listen {}:{}", host, port);
     app.listen(addr).await?;
