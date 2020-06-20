@@ -2,6 +2,8 @@
 
 use structopt::StructOpt;
 
+use jaeger_proxy::web::{serve};
+
 #[derive(Debug, StructOpt)]
 struct Serve {
     /// Activate debug mode
@@ -30,10 +32,13 @@ struct ApplicationArguments {
     command: Command,
 }
 
-fn main() {
+#[async_std::main]
+async fn main() -> Result<(), std::io::Error> {
     let opt = ApplicationArguments::from_args();
 
     match opt.command {
-        Command::Serve(params) => println!("{:?}", params),
-    }
+        Command::Serve(params) => serve(params.host, params.port).await?,
+    };
+
+    Ok(())
 }
