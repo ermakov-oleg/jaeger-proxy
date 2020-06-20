@@ -23,16 +23,16 @@ pub struct Reference {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KeyValue {
-    key: String,
+    pub(crate) key: String,
     #[serde(rename = "type")]
-    type_value: Option<String>,
-    value: Value,
+    pub(crate) type_value: Option<String>,
+    pub(crate) value: Value,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Log {
-    timestamp: u64,
-    fields: Option<Vec<KeyValue>>,
+    pub(crate) timestamp: u64,
+    pub(crate) fields: Option<Vec<KeyValue>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,7 +40,7 @@ pub struct Span {
     #[serde(rename = "traceID")]
     trace_id: String,
     #[serde(rename = "spanID")]
-    span_id: String,
+    pub(crate) span_id: String,
     #[serde(rename = "parentSpanID")]
     parent_span_id: Option<String>,
     flags: Option<u32>,
@@ -48,10 +48,10 @@ pub struct Span {
     operation_name: String,
     references: Option<Vec<Reference>>,
     #[serde(rename = "startTime")]
-    start_time: u64,
+    pub(crate) start_time: u64,
     duration: u64,
     tags: Option<Vec<KeyValue>>,
-    logs: Option<Vec<Log>>,
+    pub(crate) logs: Option<Vec<Log>>,
     #[serde(rename = "processID")]
     process_id: Option<String>,
     process: Option<Process>,
@@ -69,13 +69,13 @@ pub struct Process {
 pub struct Trace {
     #[serde(rename = "traceID")]
     trace_id: String,
-    spans: Option<Vec<Span>>,
+    pub(crate) spans: Option<Vec<Span>>,
     processes: HashMap<String, Process>,
     warnings: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetTraceResponse {
-    data: Option<Vec<Trace>>,
+    pub(crate) data: Option<Vec<Trace>>,
     errors: Option<Vec<Error>>,
 }
