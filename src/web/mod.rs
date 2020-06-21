@@ -1,6 +1,6 @@
-mod serve;
+mod elasticsearch;
 mod middlewares;
 mod models;
-mod elasticsearch;
+mod serve;
 
 pub use serve::serve;

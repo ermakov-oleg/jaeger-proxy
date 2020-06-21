@@ -1,8 +1,8 @@
 #![warn(rust_2018_idioms)]
 
 use env_logger;
-use log;
 use structopt::StructOpt;
+use surf::url::Url;
 
 use jaeger_proxy::web::serve;
 
@@ -13,7 +13,6 @@ fn setup_logger() {
         .start(level)
         .unwrap();
 }
-
 
 #[derive(Debug, StructOpt)]
 struct Serve {
@@ -28,6 +27,18 @@ struct Serve {
     /// Listen port
     #[structopt(short, long, default_value = "8000")]
     port: u16,
+
+    /// Jaeger http://host:port
+    #[structopt(short, long, env = "JAEGER_HOST")]
+    jaeger_host: Url,
+
+    /// Elasticsearch http://host:port
+    #[structopt(short, long, env = "ES_HOST")]
+    es_host: Url,
+
+    /// Elasticsearch indexes for search traces
+    #[structopt(short, long)]
+    indexes: Vec<String>,
 }
 
 #[derive(Debug, StructOpt)]
@@ -49,7 +60,16 @@ async fn main() -> Result<(), std::io::Error> {
     let opt = ApplicationArguments::from_args();
 
     match opt.command {
-        Command::Serve(params) => serve(params.host, params.port).await?,
+        Command::Serve(params) => {
+            serve(
+                params.host,
+                params.port,
+                params.jaeger_host,
+                params.es_host,
+                params.indexes,
+            )
+            .await?
+        }
     };
 
     Ok(())
