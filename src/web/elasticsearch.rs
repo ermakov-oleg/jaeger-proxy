@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 use surf::url::Url;
+use log::{info};
 
 use crate::web::models::{KeyValue, Log};
 
@@ -122,12 +123,12 @@ impl ESClient {
         let index: String = self.indexes.join(",");
         let url = self.host.join(format!("{}/_search", index).as_str()).unwrap();
 
-        println!("ES Search -> {}", &url);
-        println!("{}", serde_json::to_string(&query).unwrap());
+        info!("ES Search -> {}", &url);
+        info!("{}", serde_json::to_string(&query).unwrap());
 
         let mut res = surf::post(&url).body_json(&query).unwrap().await.unwrap();
 
-        println!("ES Response -> {} [{}]", &url, res.status());
+        info!("ES Response -> {} [{}]", &url, res.status());
 
         let result: ESResult = res.body_json().await.unwrap();
 

@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::env::var;
 use std::net::SocketAddr;
 
+use async_log::{instrument, span};
+use log::{debug, error, info, warn};
 use surf::url::Url;
 use tide::{Request, Response, StatusCode};
 
@@ -52,14 +54,12 @@ async fn added_log_handler(req: Request<ApplicationState>) -> tide::Result {
 
     let trace_id: String = req.param("trace_id").expect("Expected trace_id parameter");
 
-    dbg!(&trace_id);
-
     let mut res = surf::get(path).await.unwrap();
 
     let body: String = res.body_string().await.unwrap();
 
     let mut trace_response: GetTraceResponse = serde_json::from_str(body.as_ref()).unwrap();
-    println!("{:#?}", trace_response);
+    debug!("{:#?}", trace_response);
 
 
     let mut from: Option<u64> = None;
@@ -114,7 +114,7 @@ async fn added_log_handler(req: Request<ApplicationState>) -> tide::Result {
                 }
             }
 
-            println!("Unused logs {:?}", span_logs);
+            warn!("Unused logs {:?}", span_logs);
         }
     }
 
@@ -135,10 +135,10 @@ async fn added_log_handler(req: Request<ApplicationState>) -> tide::Result {
 
 pub async fn serve(host: String, port: u16) -> Result<(), std::io::Error> {
     let jaeger_url: Url = format!("{}:{}", *JAEGER_HOST, *JAEGER_PORT).parse().expect("Invalid JAEGER_HOST:JAEGER_PORT");
-    println!("Proxy request to {}", jaeger_url);
+    info!("Proxy request to {}", jaeger_url);
 
     let es_host: Url = (*ES_HOST).parse().expect("Invalid ES_HOST");
-    println!("Elasticsearch host: {}", es_host);
+    info!("Elasticsearch host: {}", es_host);
 
     let addr: SocketAddr = format!("{}:{}", host, port).parse().expect("Unable to parse socket address");
 
@@ -163,7 +163,7 @@ pub async fn serve(host: String, port: u16) -> Result<(), std::io::Error> {
     app.at("/*").get(proxy_handler);
     app.at("/api/traces/:trace_id").get(added_log_handler);
 
-    println!("Listen {}:{}", host, port);
+    info!("Listen {}:{}", host, port);
     app.listen(addr).await?;
 
     Ok(())

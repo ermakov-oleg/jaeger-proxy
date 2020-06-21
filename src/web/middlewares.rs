@@ -1,6 +1,8 @@
 use std::future::Future;
 use std::pin::Pin;
 
+use log::{info};
+
 use tide::{Next, Request, Result};
 
 
@@ -23,7 +25,7 @@ pub fn access_log<'a, State>(
                 None => "noop".to_string(),
         };
 
-        println!("{} -> {}", url, response_code);
+        info!("{} -> {}", url, response_code);
         res
     })
 }

@@ -1,8 +1,19 @@
 #![warn(rust_2018_idioms)]
 
+use env_logger;
+use log;
 use structopt::StructOpt;
 
-use jaeger_proxy::web::{serve};
+use jaeger_proxy::web::serve;
+
+fn setup_logger() {
+    let logger = env_logger::builder().build();
+    let level = logger.filter().clone();
+    async_log::Logger::wrap(logger, || /* get the task id here */ 0)
+        .start(level)
+        .unwrap();
+}
+
 
 #[derive(Debug, StructOpt)]
 struct Serve {
@@ -34,6 +45,7 @@ struct ApplicationArguments {
 
 #[async_std::main]
 async fn main() -> Result<(), std::io::Error> {
+    setup_logger();
     let opt = ApplicationArguments::from_args();
 
     match opt.command {
